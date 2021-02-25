@@ -1,0 +1,20 @@
+metrics:
+  prod_time_pending_kyc_in_inboundservice:
+    type: gauge
+    description: how long each inbound transaction has been waiting for customer registration details to continue 
+    labels: [transaction_id]
+queries:
+  query1:
+    interval: 600
+    databases: [db1]
+    metrics: [prod_time_pending_kyc_in_inboundservice]
+    sql: >
+      select t.transaction_id as transaction_id,
+      CASE when t.response_code = '23' THEN 
+      TIMESTAMPDIFF(HOUR , t.updated , NOW())
+      ELSE '0'
+      END  as 'prod_time_pending_kyc_in_inboundservice'
+      from inboundservice.`transaction` t
+      where transaction_id in (
+      SELECT transaction_id from inboundservice.transaction t2 where t2.updated BETWEEN (DATE_SUB(NOW(),INTERVAL 1 hour)) AND NOW()
+      UNION SELECT transaction_id from inboundservice.transaction t2 where t2.response_code = '23')

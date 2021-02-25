@@ -1,0 +1,25 @@
+version: 0.2
+env:
+  variables:
+      ECR_REPOSITORY_URI: "658358111897.dkr.ecr.eu-west-1.amazonaws.com/prometheus-sql-query-exporter"
+      ECS_CLUSTER_NAME: "mama-prod-ecs"
+      ECS_SERVICE_NAME: "prod-qems"
+      ECS_CONTAINER_NAME: "prod-qems"
+
+phases:
+  install:
+    commands:
+       - eval $(aws ecr get-login --region eu-west-1 --no-include-email)
+  pre_build:
+    commands:
+       - COMMIT_HASH=$(echo ${CODEBUILD_RESOLVED_SOURCE_VERSION} | cut -c 1-12)
+       - IMAGE_TAG=${TARGET_ENV}-${COMMIT_HASH}
+  build:
+    commands:
+       - docker build --build-arg TARGET_ENV=${TARGET_ENV} --tag ${ECR_REPOSITORY_URI}:${IMAGE_TAG} .
+       - docker push ${ECR_REPOSITORY_URI}:${IMAGE_TAG}
+       - printf '[{"name":"%s","imageUri":"%s"}]' ${ECS_CONTAINER_NAME} ${ECR_REPOSITORY_URI}:${IMAGE_TAG} > imagedefinitions.json
+
+artifacts:
+  files:
+    - imagedefinitions.json
