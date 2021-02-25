@@ -1,5 +1,5 @@
-# qems-partners
-Query Exporter Metric Service for Partners Environment
+# qems-prod
+Query Exporter Metric Service for Prod Environment (based on [query-exporter-metric-service](https://github.com/MamaMoney/query-exporter-metric-service) repo).
 
 ## How it works
 
